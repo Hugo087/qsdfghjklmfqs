@@ -1,0 +1,145 @@
+<UserControl x:Class="GuidControl.GuidTextBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:GuidControl">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="BrushBg"      Color="#1E1E2E"/>
+        <SolidColorBrush x:Key="BrushSurface" Color="#2A2A3E"/>
+        <SolidColorBrush x:Key="BrushBorder"  Color="#3D3D5C"/>
+        <SolidColorBrush x:Key="BrushText"    Color="#E0E0F0"/>
+        <SolidColorBrush x:Key="BrushMuted"   Color="#8888AA"/>
+
+        <Style x:Key="SegmentStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, Courier New"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Opacity" Value="0.55"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="{StaticResource BrushBg}" CornerRadius="12" Padding="2">
+        <StackPanel>
+
+            <!-- Label -->
+            <TextBlock x:Name="LabelText"
+                       Text="GUID"
+                       Foreground="{StaticResource BrushMuted}"
+                       FontFamily="Segoe UI, Arial"
+                       FontSize="11"
+                       FontWeight="SemiBold"
+                       Margin="14,10,0,6"/>
+
+            <!-- Zone de saisie -->
+            <Border x:Name="InputBorder"
+                    Background="{StaticResource BrushSurface}"
+                    BorderBrush="{StaticResource BrushBorder}"
+                    BorderThickness="1.5"
+                    CornerRadius="8"
+                    Margin="6,0,6,0">
+                <Grid>
+                    <!-- Placeholder -->
+                    <TextBlock x:Name="PlaceholderText"
+                               Text="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                               Foreground="{StaticResource BrushMuted}"
+                               FontFamily="Cascadia Code, Consolas, Courier New"
+                               FontSize="14"
+                               VerticalAlignment="Center"
+                               Margin="12,0,0,0"
+                               Opacity="0.4"
+                               IsHitTestVisible="False"/>
+                    <TextBox x:Name="GuidInputBox"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="{StaticResource BrushText}"
+                             CaretBrush="#7C6FCD"
+                             FontFamily="Cascadia Code, Consolas, Courier New"
+                             FontSize="14"
+                             Padding="12,10"
+                             VerticalContentAlignment="Center"
+                             MaxLength="36"
+                             CharacterCasing="Upper"
+                             TextChanged="GuidInputBox_TextChanged"
+                             PreviewKeyDown="GuidInputBox_PreviewKeyDown"
+                             PreviewTextInput="GuidInputBox_PreviewTextInput"
+                             DataObject.Pasting="GuidInputBox_Pasting"/>
+                </Grid>
+            </Border>
+
+            <!-- Barres de progression par segment (8-4-4-4-12) -->
+            <Grid Margin="8,8,8,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Seg 1 : 8 chars -->
+                <StackPanel Grid.Column="0">
+                    <Border x:Name="Seg1Bar" Height="3" CornerRadius="2" Margin="0,0,2,0"/>
+                    <TextBlock x:Name="Seg1Count" Style="{StaticResource SegmentStyle}"
+                               Text="0/8" HorizontalAlignment="Center" Margin="0,3,0,0"
+                               Foreground="#AA7C6FCD"/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="1" Text="—" Foreground="{StaticResource BrushBorder}"
+                           VerticalAlignment="Center" Margin="4,0" FontSize="10"/>
+
+                <!-- Seg 2 : 4 chars -->
+                <StackPanel Grid.Column="2">
+                    <Border x:Name="Seg2Bar" Height="3" CornerRadius="2" Margin="1,0"/>
+                    <TextBlock x:Name="Seg2Count" Style="{StaticResource SegmentStyle}"
+                               Text="0/4" HorizontalAlignment="Center" Margin="0,3,0,0"
+                               Foreground="#AA3DBAED"/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="3" Text="—" Foreground="{StaticResource BrushBorder}"
+                           VerticalAlignment="Center" Margin="4,0" FontSize="10"/>
+
+                <!-- Seg 3 : 4 chars -->
+                <StackPanel Grid.Column="4">
+                    <Border x:Name="Seg3Bar" Height="3" CornerRadius="2" Margin="1,0"/>
+                    <TextBlock x:Name="Seg3Count" Style="{StaticResource SegmentStyle}"
+                               Text="0/4" HorizontalAlignment="Center" Margin="0,3,0,0"
+                               Foreground="#AAFF9F43"/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="5" Text="—" Foreground="{StaticResource BrushBorder}"
+                           VerticalAlignment="Center" Margin="4,0" FontSize="10"/>
+
+                <!-- Seg 4 : 4 chars -->
+                <StackPanel Grid.Column="6">
+                    <Border x:Name="Seg4Bar" Height="3" CornerRadius="2" Margin="1,0"/>
+                    <TextBlock x:Name="Seg4Count" Style="{StaticResource SegmentStyle}"
+                               Text="0/4" HorizontalAlignment="Center" Margin="0,3,0,0"
+                               Foreground="#AAFF5370"/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="7" Text="—" Foreground="{StaticResource BrushBorder}"
+                           VerticalAlignment="Center" Margin="4,0" FontSize="10"/>
+
+                <!-- Seg 5 : 12 chars -->
+                <StackPanel Grid.Column="8">
+                    <Border x:Name="Seg5Bar" Height="3" CornerRadius="2" Margin="2,0,0,0"/>
+                    <TextBlock x:Name="Seg5Count" Style="{StaticResource SegmentStyle}"
+                               Text="0/12" HorizontalAlignment="Center" Margin="0,3,0,0"
+                               Foreground="#AA3DDC84"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Statut -->
+            <TextBlock x:Name="StatusText"
+                       Text="Entrez un GUID"
+                       Foreground="{StaticResource BrushMuted}"
+                       FontFamily="Segoe UI, Arial"
+                       FontSize="11"
+                       Margin="8,0,8,10"/>
+
+        </StackPanel>
+    </Border>
+</UserControl>
