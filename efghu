@@ -1,0 +1,137 @@
+[TestClass]
+public class GitCaseCorrectorTests
+{
+    private Mock<IFileSystem> _fileSystemMock;
+    private Mock<IGitClient> _gitClientMock;
+    private GitCaseCorrector _sut;
+    private const string RepoPath = @"C:\repo";
+
+    [TestInitialize]
+    public void Setup()
+    {
+        _fileSystemMock = new Mock<IFileSystem>();
+        _gitClientMock = new Mock<IGitClient>();
+        _sut = new GitCaseCorrector(_fileSystemMock.Object, _gitClientMock.Object);
+    }
+
+    // --- GetCaseMismatches ---
+
+    [TestMethod]
+    public void GetCaseMismatches_ShouldReturnEmpty_WhenCasingIsIdentical()
+    {
+        _fileSystemMock
+            .Setup(fs => fs.GetFiles(RepoPath))
+            .Returns([@"C:\repo\src\MyFile.cs", @"C:\repo\README.md"]);
+
+        _gitClientMock
+            .Setup(g => g.GetTrackedFiles(RepoPath))
+            .Returns([@"src\MyFile.cs", "README.md"]);
+
+        var result = _sut.GetCaseMismatches(RepoPath);
+
+        Assert.AreEqual(0, result.Count);
+    }
+
+    [TestMethod]
+    public void GetCaseMismatches_ShouldDetectMismatch_WhenGitCasingDiffers()
+    {
+        _fileSystemMock
+            .Setup(fs => fs.GetFiles(RepoPath))
+            .Returns([@"C:\repo\src\MyFile.cs"]);
+
+        _gitClientMock
+            .Setup(g => g.GetTrackedFiles(RepoPath))
+            .Returns([@"src\myfile.cs"]); // casse incorrecte dans git
+
+        var result = _sut.GetCaseMismatches(RepoPath);
+
+        Assert.AreEqual(1, result.Count);
+        Assert.AreEqual(@"src\myfile.cs", result[0].GitPath);
+        Assert.AreEqual(@"src\MyFile.cs", result[0].WindowsPath);
+    }
+
+    [TestMethod]
+    public void GetCaseMismatches_ShouldReturnEmpty_WhenGitFileNotOnDisk()
+    {
+        // Fichier git supprimé localement : pas de correction possible
+        _fileSystemMock
+            .Setup(fs => fs.GetFiles(RepoPath))
+            .Returns([]);
+
+        _gitClientMock
+            .Setup(g => g.GetTrackedFiles(RepoPath))
+            .Returns([@"src\Ghost.cs"]);
+
+        var result = _sut.GetCaseMismatches(RepoPath);
+
+        Assert.AreEqual(0, result.Count);
+    }
+
+    [TestMethod]
+    public void GetCaseMismatches_ShouldDetectMultipleMismatches()
+    {
+        _fileSystemMock
+            .Setup(fs => fs.GetFiles(RepoPath))
+            .Returns([
+                @"C:\repo\src\MyFile.cs",
+                @"C:\repo\src\OtherFile.cs",
+                @"C:\repo\README.md"
+            ]);
+
+        _gitClientMock
+            .Setup(g => g.GetTrackedFiles(RepoPath))
+            .Returns([
+                @"src\myfile.cs",     // mismatch
+                @"src\OtherFile.cs",  // ok
+                @"readme.md"          // mismatch
+            ]);
+
+        var result = _sut.GetCaseMismatches(RepoPath);
+
+        Assert.AreEqual(2, result.Count);
+    }
+
+    // --- FixCaseMismatches ---
+
+    [TestMethod]
+    public void FixCaseMismatches_ShouldCallRename_WithTwoSteps_ForEachMismatch()
+    {
+        _fileSystemMock
+            .Setup(fs => fs.GetFiles(RepoPath))
+            .Returns([@"C:\repo\src\MyFile.cs"]);
+
+        _gitClientMock
+            .Setup(g => g.GetTrackedFiles(RepoPath))
+            .Returns([@"src\myfile.cs"]);
+
+        _sut.FixCaseMismatches(RepoPath);
+
+        // Étape 1 : renommage vers un nom temporaire
+        _gitClientMock.Verify(
+            g => g.RenameFile(RepoPath, @"src\myfile.cs", @"src\myfile.cs_tmp_case_fix"),
+            Times.Once);
+
+        // Étape 2 : renommage vers la casse Windows
+        _gitClientMock.Verify(
+            g => g.RenameFile(RepoPath, @"src\myfile.cs_tmp_case_fix", @"src\MyFile.cs"),
+            Times.Once);
+    }
+
+    [TestMethod]
+    public void FixCaseMismatches_ShouldNotCallRename_WhenNoCaseMismatch()
+    {
+        _fileSystemMock
+            .Setup(fs => fs.GetFiles(RepoPath))
+            .Returns([@"C:\repo\src\MyFile.cs"]);
+
+        _gitClientMock
+            .Setup(g => g.GetTrackedFiles(RepoPath))
+            .Returns([@"src\MyFile.cs"]);
+
+        _sut.FixCaseMismatches(RepoPath);
+
+        _gitClientMock.Verify(
+            g => g.RenameFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
+            Times.Never);
+    }
+}
